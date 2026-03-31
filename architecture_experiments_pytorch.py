@@ -23,24 +23,21 @@ def top5_predictions(model, inputs, labels):
 def main():
     image_path = input("Enter image path: ").strip()
 
-    alex_weights = AlexNet_Weights.DEFAULT
-    resnet_weights = ResNet101_Weights.DEFAULT
-    mobile_weights = MobileNet_V2_Weights.DEFAULT
-
-    preprocess = alex_weights.transforms()
-    labels = alex_weights.meta["categories"]
-    inputs = load_image(image_path, preprocess)
-
     experiments = [
-        ("AlexNet", models.alexnet(weights=alex_weights)),
-        ("ResNet101", models.resnet101(weights=resnet_weights)),
-        ("MobileNetV2", models.mobilenet_v2(weights=mobile_weights)),
+        ("AlexNet", AlexNet_Weights.DEFAULT, models.alexnet),
+        ("ResNet101", ResNet101_Weights.DEFAULT, models.resnet101),
+        ("MobileNetV2", MobileNet_V2_Weights.DEFAULT, models.mobilenet_v2),
     ]
 
     all_results = {}
-    for name, model in experiments:
+    for name, weights, model_builder in experiments:
+        model = model_builder(weights=weights)
+        inputs = load_image(image_path, weights.transforms())
+        labels = weights.meta["categories"]
+
         preds = top5_predictions(model, inputs, labels)
         all_results[name] = preds
+
         print(f"\nTop 5 predictions for {name}:")
         for i, (label, prob) in enumerate(preds, start=1):
             print(f"{i}. {label} ({prob * 100:.2f}% probability)")
